@@ -39,6 +39,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 El backend debe tener su propio `.env` configurado. Si el backend corre dentro de Docker y la base de datos esta en tu maquina, usa `host.docker.internal` en `DATABASE_URL`.
 
+Los logs del backend salen por consola y se pueden consultar con:
+
+```bash
+docker compose logs -f backend
+```
+
 ## Uso
 
 Levantar backend y frontend:
