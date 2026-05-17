@@ -1,0 +1,48 @@
+services:
+  migrate:
+    build:
+      context: ${BACKEND_CONTEXT:-../ab-comercial-backend}
+    container_name: ab_comercial_migrate
+    env_file:
+      - ${BACKEND_ENV_FILE:-../ab-comercial-backend/.env}
+    command: ["alembic", "upgrade", "head"]
+
+  backend:
+    build:
+      context: ${BACKEND_CONTEXT:-../ab-comercial-backend}
+    container_name: ab_comercial_api
+    restart: unless-stopped
+    env_file:
+      - ${BACKEND_ENV_FILE:-../ab-comercial-backend/.env}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  seed:
+    build:
+      context: ${BACKEND_CONTEXT:-../ab-comercial-backend}
+    container_name: ab_comercial_seed
+    profiles:
+      - tools
+    env_file:
+      - ${BACKEND_ENV_FILE:-../ab-comercial-backend/.env}
+    command: ["python", "-m", "scripts.seed"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ${FRONTEND_CONTEXT:-../ab-comercial-frontend}
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    container_name: ab_comercial_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
